@@ -2,7 +2,9 @@ package com.example.camera;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
@@ -12,6 +14,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -19,10 +22,13 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
     Button upload;
+    private Uri imageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,26 +56,26 @@ public class MainActivity extends AppCompatActivity {
     }
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1 && resultCode == RESULT_OK) {
+        if (requestCode == 1 && resultCode == RESULT_OK && data != null) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-            byte[] datas = baos.toByteArray();
-            StorageReference storageRef = FirebaseStorage.getInstance().getReference();
-            StorageReference imagesRef = storageRef.child("images/" + System.currentTimeMillis() + ".jpg");
-
-            imagesRef.putBytes(datas)
-                    .addOnSuccessListener(taskSnapshot -> {
-                        imagesRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                            Toast.makeText(MainActivity.this, "Image uploaded", Toast.LENGTH_SHORT).show();
-                        });
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(MainActivity.this, "Upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
-
+            saveImageLocally(imageBitmap);
         }
     }
+
+    private void saveImageLocally(Bitmap bitmap) {
+        String savedImageURL = MediaStore.Images.Media.insertImage(
+                getContentResolver(),
+                bitmap,
+                "Captured Image",
+                "Image captured by camera"
+        );
+
+        if (savedImageURL != null) {
+            Toast.makeText(this, "Saved to gallery", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Error saving image", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }
