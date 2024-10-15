@@ -28,7 +28,6 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity {
 
     Button upload;
-    private Uri imageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,16 +58,16 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == 1 && resultCode == RESULT_OK && data != null) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
-            saveImageLocally(imageBitmap);
+            save(imageBitmap);
         }
     }
 
-    private void saveImageLocally(Bitmap bitmap) {
+    private void save(Bitmap bitmap) {
         String savedImageURL = MediaStore.Images.Media.insertImage(
                 getContentResolver(),
                 bitmap,
-                "Captured Image",
-                "Image captured by camera"
+                "img",
+                "camimg"
         );
 
         if (savedImageURL != null) {
